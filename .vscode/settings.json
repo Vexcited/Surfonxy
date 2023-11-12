@@ -1,0 +1,17 @@
+{
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+
+  "cSpell.language": "en",
+  "cSpell.words": [
+    "surfonxied",
+    "surfonxy"
+  ]
+}

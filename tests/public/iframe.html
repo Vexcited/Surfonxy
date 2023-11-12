@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iframe - Surfonxy</title>
+</head>
+<body>
+  <h1>iframe example</h1>
+  <a href="/">Go back to the index</a>
+
+  <h2>inline</h2>
+  <iframe
+    title="inlined content"
+    width="100%"
+    height="300px"
+    srcdoc="
+      <style>
+        .green { color: green; }
+        .red { color: red; }
+      </style>
+      
+      <p>iframe content</p>
+      <p>we check location and window.location</p>
+
+      <!-- where we'll see results -->
+      <span id=results></span>
+
+      <script>
+        function checkValue(value, expected) {
+          if (value === expected) {
+            return `<span class=green>ok! <i>matches '${value}'</i></span>`;
+          }
+
+          return `<span class=red>failed : got ${value} instead of ${expected}</span>`;
+        } 
+
+        document.getElementById('results').innerHTML = [
+          'window.location.href: ' + checkValue(window.location.href, 'about:srcdoc'),
+          'document.location.href: ' + checkValue(document.location.href, 'about:srcdoc'),
+          'document.referrer: ' + checkValue(document.referrer, 'http://localhost:8000/'),
+          'window.parent.location.href: ' + checkValue(window.parent.location.href, 'http://localhost:8000/iframe.html'),
+          'window.parent.document.referrer: ' + checkValue(window.parent.document.referrer, 'http://localhost:8000/'),
+          'window.top.location.href: ' + checkValue(window.top.location.href, 'http://localhost:8000/iframe.html'),
+          'top.location.href: ' + checkValue(top.location.href, 'http://localhost:8000/iframe.html'),
+          'parent.location.href: ' + checkValue(parent.location.href, 'http://localhost:8000/iframe.html'),
+          'globalThis.window.parent.location.href: ' + checkValue(globalThis.window.parent.location.href, 'http://localhost:8000/iframe.html'),
+          'window.parent.document.location.href: ' + checkValue(window.parent.document.location.href, 'http://localhost:8000/iframe.html'),
+          'parent.document.location.href: ' + checkValue(parent.document.location.href, 'http://localhost:8000/iframe.html'),
+          'top.document.location.href: ' + checkValue(top.document.location.href, 'http://localhost:8000/iframe.html'),
+          'globalThis.window.parent.document.location.href: ' + checkValue(globalThis.window.parent.document.location.href, 'http://localhost:8000/iframe.html'),
+          'globalThis.window.top.document.location.href: ' + checkValue(globalThis.window.top.document.location.href, 'http://localhost:8000/iframe.html'),
+          'window.self.location.href: ' + checkValue(window.self.location.href, 'about:srcdoc'),
+          'self.location.href: ' + checkValue(self.location.href, 'about:srcdoc'),
+        ].join('<br>')
+      </script>
+    "
+  >
+  </iframe>
+
+  <h2>external</h2>
+  <iframe
+    title="external content"
+    width="100%"
+    height="300px"
+    src="https://example.org"
+  >
+  </iframe>
+</body>
+</html>

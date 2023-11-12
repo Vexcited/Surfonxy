@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>requests - Surfonxy</title>
+</head>
+<body>
+  <h1>Requests</h1>
+  <a href="/">Go back to the index</a>
+
+  <h2>Result</h2>
+  <textarea id="result"></textarea>
+
+  <h2>onClicks</h2>
+  <button type="button" onclick="make('https://api.github.com')">
+    api.github.com
+  </button>
+
+  <script>
+    const result = document.getElementById('result');
+
+    function make(url) {
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          result.value = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+          result.value = error;
+        });
+    }
+  </script>
+</body>
+</html>

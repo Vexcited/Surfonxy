@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>object location - Surfonxy</title>
+</head>
+<body>
+  <h1>object location example</h1>
+  <a href="/">Go back to the index</a>
+
+  <h2>results</h2>
+
+  <div id="results">
+
+  </div>
+
+  <script>
+    const globals = {
+      w: window,
+      d: document,
+      s: self,
+      g: globalThis,
+      t: this
+    };
+
+    const results = document.getElementById('results');
+
+    const checkValue = (value, expected) => {
+      if (value === expected) {
+        return `<span style="color: green;">ok! <i>matches '${value}'</i></span>`;
+      }
+
+      return `<span style="color: red;">failed : got ${value} instead of ${expected}</span>`;
+    };
+
+    const check = (name, value, expected) => {
+      const result = checkValue(value, expected);
+
+      results.innerHTML += `<p>${name}: ${result}</p>`;
+    };
+
+    check('window.location.href', globals.w.location.href, 'http://localhost:8000/object_location.html');
+    check('window.document.location.href', globals.w.document.location.href, 'http://localhost:8000/object_location.html');
+    check('document.location.href', globals.d.location.href, 'http://localhost:8000/object_location.html');
+    check('self.location.href', globals.s.location.href, 'http://localhost:8000/object_location.html');
+    check('globalThis.location.href', globals.g.window.location.href, 'http://localhost:8000/object_location.html');
+    check('/this/.location.href', globals.t.location.href, 'http://localhost:8000/object_location.html');
+  </script>
+</body>
+</html>

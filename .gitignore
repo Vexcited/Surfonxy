@@ -1,0 +1,43 @@
+# Logs
+
+logs
+_.log
+.pnpm-debug.log*
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# Runtime data
+
+pids
+_.pid
+_.seed
+\*.pid.lock
+
+# Dependencies
+
+node_modules/
+
+# TypeScript cache
+
+\*.tsbuildinfo
+
+# Optional npm cache directory
+
+.npm
+
+# Optional eslint cache
+
+.eslintcache
+
+# Optional REPL history
+
+.node_repl_history
+
+# dotenv environment variable files
+
+.env*
+
+# mkcert
+*.pem

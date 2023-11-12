@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>about:blank iframes | Surfonxy</title>
+</head>
+<body>
+  <h1>about:blank iframes</h1>
+  <a href="/">Go back to the index</a>
+
+  <p>There might be an error with the service-worker when handling about:blank iframes.</p>
+
+  <h2>empty about:blank</h2>
+  <div id="empty"></div>
+
+  <script>
+    /** @type {HTMLDivElement} */
+    const emptyIframeContainer = document.getElementById("empty");
+    const emptyIframe = document.createElement("iframe");
+    emptyIframeContainer.appendChild(emptyIframe);
+    emptyIframe.contentWindow.document.body.innerText = "hello world, location !";
+  </script>
+</body>
+</html>
