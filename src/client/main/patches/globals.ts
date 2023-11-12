@@ -797,6 +797,8 @@ export const patchNodeAndElement = ($window: typeof window) => {
 };
 
 export const patchWebSocket = ($window: typeof window) => {
+  const originalWebSocketNativeString = $window.WebSocket.toString();
+
   try { // Patch the prototype's URL.
     patchDescriptorInPrototype($window, $window.WebSocket.prototype, "url",
       function (getter) {
@@ -838,47 +840,72 @@ export const patchWebSocket = ($window: typeof window) => {
       true, false, true
     );
     
-    // Prevents to be edited.
-    $window.WebSocket.toString = () => "function WebSocket() { [native code] }";
-
-    // Make sure `WebSocket.OPEN === 1` 
-    patchDescriptorInPrototype($window, $window.WebSocket, "OPEN",
+    // Prevents to see that it has been edited.
+    patchMethodInPrototype($window.WebSocket.prototype, "toString",
       function () {
-        return 1;
+        return originalWebSocketNativeString;
       },
-      function () { /** No-op. */ },
-      
-      false, false
-    );
 
+      false, false, false
+    );
+    patchMethodInPrototype($window.WebSocket, "toString",
+      function () {
+        return originalWebSocketNativeString;
+      },
+
+      false, false, false
+    );
+    
+    // Make sure `WebSocket.OPEN === 1`
+    $window.Object.defineProperty($window.WebSocket, "OPEN",
+      {
+        set: function () { /** No-op */ },
+        get: function () {
+          return 1;
+        },
+
+        configurable: false,
+        enumerable: true
+      }
+    );
+    
     // Make sure `WebSocket.CONNECTING === 0` 
-    patchDescriptorInPrototype($window, $window.WebSocket, "CONNECTING",
-      function () {
-        return 0;
-      },
-      function () { /** No-op. */ },
-      
-      false, false
-    );
+    $window.Object.defineProperty($window.WebSocket, "CONNECTING",
+      {
+        set: function () { /** No-op */ },
+        get: function () {
+          return 0;
+        },
 
+        configurable: false,
+        enumerable: true
+      }
+    );
+    
     // Make sure `WebSocket.CLOSING === 2` 
-    patchDescriptorInPrototype($window, $window.WebSocket, "CLOSING",
-      function () {
-        return 2;
-      },
-      function () { /** No-op. */ },
-      
-      false, false
-    );
+    $window.Object.defineProperty($window.WebSocket, "CLOSING",
+      {
+        set: function () { /** No-op */ },
+        get: function () {
+          return 2;
+        },
 
+        configurable: false,
+        enumerable: true
+      }
+    );
+    
     // Make sure `WebSocket.CLOSED === 3` 
-    patchDescriptorInPrototype($window, $window.WebSocket, "CLOSED",
-      function () {
-        return 3;
-      },
-      function () { /** No-op. */ },
-      
-      false, false
+    $window.Object.defineProperty($window.WebSocket, "CLOSED",
+      {
+        set: function () { /** No-op */ },
+        get: function () {
+          return 3;
+        },
+
+        configurable: false,
+        enumerable: true
+      }
     );
   }
   catch (error) {
