@@ -821,7 +821,7 @@ export const patchWebSocket = ($window: typeof window) => {
     console.error(error);
   }
 
-  // All the patches related to the `WebSocket` prototype
+  // All the patches related to the original `WebSocket` prototype
   // should be before this patch because after,
   // the prototype will be *overwritten*.
   try { // Patch the main WebSocket constructor.
@@ -840,8 +840,48 @@ export const patchWebSocket = ($window: typeof window) => {
     
     // Prevents to be edited.
     $window.WebSocket.toString = () => "function WebSocket() { [native code] }";
+
+    // Make sure `WebSocket.OPEN === 1` 
+    patchDescriptorInPrototype($window, $window.WebSocket, "OPEN",
+      function () {
+        return 1;
+      },
+      function () { /** No-op. */ },
+      
+      false, false
+    );
+
+    // Make sure `WebSocket.CONNECTING === 0` 
+    patchDescriptorInPrototype($window, $window.WebSocket, "CONNECTING",
+      function () {
+        return 0;
+      },
+      function () { /** No-op. */ },
+      
+      false, false
+    );
+
+    // Make sure `WebSocket.CLOSING === 2` 
+    patchDescriptorInPrototype($window, $window.WebSocket, "CLOSING",
+      function () {
+        return 2;
+      },
+      function () { /** No-op. */ },
+      
+      false, false
+    );
+
+    // Make sure `WebSocket.CLOSED === 3` 
+    patchDescriptorInPrototype($window, $window.WebSocket, "CLOSED",
+      function () {
+        return 3;
+      },
+      function () { /** No-op. */ },
+      
+      false, false
+    );
   }
   catch (error) {
-    console.error(error);
+    console.error("[patches/globals]: Failed to patch WebSocket.", error);
   }
 };
