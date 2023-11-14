@@ -77,11 +77,6 @@ export const tweakHTML = async (
   $("meta[http-equiv=\"Content-Security-Policy\"]").each(function () {
     $(this).remove();
   });
-  
-  // Remove every <base> elements from DOM.
-  $("head>base").each(function () {
-    $(this).remove();
-  });
 
   const pl = new URL(request_url.href);
   pl.searchParams.set("__sf_url", btoa(proxied_url.origin));
@@ -92,16 +87,32 @@ export const tweakHTML = async (
   permalink.searchParams.set("__sf_register", "1");
 
   // Add our client script at the beginning of the `head` of the document.
-  $("head").prepend(`<script __surfonxied="1">
+  $("head").prepend(`
+<script __surfonxied="1">
   window.__sf_permalink = new URL('${permalink.href}');
   window.__sf_serviceWorkerUrl = '${request_url.origin}/__sf.sw.js?__sf_url=1&dummy=${crypto.randomUUID()}';
-  </script>`);
+</script>
+  `.trim());
 
-  // Add `<base>`, <https://developer.mozilla.org/docs/Web/HTML/Element/base>
-  // > Rewrites every relative URLs in the DOM.
-  // > There can be only one `<base>` element.
-  $("head").prepend("<base __sfGenerated=\"1\" />");
-  $("base").attr("href", proxied_url.href);
+  const current_base = $("head base");
+  if (current_base.length === 0) {
+    // Add generated `<base>`, <https://developer.mozilla.org/docs/Web/HTML/Element/base>.
+    // Will be removed by client script if another `<base>`
+    // already exists somehow.
+    $("head").prepend(`<base __sfGenerated="1" href="${proxied_url.href}" />`);
+  }
+  // When there's already a `<base>` element, we cutely patch it.
+  else {
+    const current_base_href = current_base.attr("href");
+    // NOTE: We don't check if `current_base_href` is `undefined` or not.
+    const new_base_href = new URL(
+      current_base_href!,
+      proxied_url.href
+    );
+  
+    // Patch the `href` attribute.
+    current_base.attr("href", new_base_href.href);
+  }
 
   return $.html();
 };

@@ -101,12 +101,13 @@ export class SurfonxyElement {
         }
       },
       base: () => {
+        // remove the generated base element if exists
         if (!this.hasAttr("__sfGenerated")) {
           const head = this.$window.document.head;
-          const current_base = head.querySelector("base[__sfGenerated]");
+          const generated_base = head.querySelector("base[__sfGenerated]");
 
-          if (current_base) {
-            head.removeChild(current_base);
+          if (generated_base) {
+            head.removeChild(generated_base);
           }
         }
 
