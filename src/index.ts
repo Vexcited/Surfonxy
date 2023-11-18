@@ -6,8 +6,6 @@ import { isUtf8 } from "node:buffer";
 import * as esbuild from "esbuild";
 import url from "node:url";
 
-import { fetch, Agent, setGlobalDispatcher, type Response } from "undici";
-
 // @ts-ignore
 import WebSocket from "faye-websocket";
 // @ts-ignore
@@ -17,10 +15,6 @@ import { SurfonxyCookie } from "./cookie";
 import { tweakHTML } from "./tweaks/html";
 import { getFirstLoadDocument } from "./templates/first-load";
 import { tweakJS } from "./tweaks/javascript";
-
-setGlobalDispatcher(new Agent({
-  maxHeaderSize: 64768*2 // 8096*2kb
-}));
 
 const main_script_result = await esbuild.build({
   entryPoints: [
@@ -83,6 +77,8 @@ const getBody = (message: IncomingMessage) => {
   });
 };
 
+const cookieStore: string[] = [];
+
 const handleProxy = async (res: ServerResponse<IncomingMessage> & {
   req: IncomingMessage;
 }, request_proxy_url: URL) => {
@@ -132,16 +128,21 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
     request_headers[key] = value;
   }
 
-  const raw_user_cookies = getHeaderValue(request_headers, "cookie") || "";
-  const user_cookies = new SurfonxyCookie(
-    raw_user_cookies,
+  const client_user_cookies = getHeaderValue(request_headers, "x-sf-cookie") || "";
+  const raw_server_user_cookies = cookieStore.join("; ");
+  const server_user_cookies = new SurfonxyCookie(
+    raw_server_user_cookies,
     request_url.hostname,
     request_proxy_url.hostname
-  );
+  ).proxyGetter();
 
-  // console.log("-> (raw)", raw_user_cookies.split("; "));
-  const sent_cookies = user_cookies.proxyGetter();
-  // console.log("->", (sent_cookies).split("; "));
+  // we concatenate both cookies
+  const sent_cookies = [
+    ...client_user_cookies.split(";").map((cookie) => cookie.trim()),
+    ...server_user_cookies.split(";").map((cookie) => cookie.trim())
+  ].join("; ");
+
+  console.log("sent:", sent_cookies, "::", request_url.href);
 
   // Proxy the cookies to have only the ones for the current domain.
   if (sent_cookies) {
@@ -223,7 +224,8 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
       // TODO: find the error code, this is currently wrong.
       if (error.code === "ETIMEDOUT") {
         console.warn("[req][timeout]", (request_url as URL).href);
-        return makeRequestToRealServer();
+        return;
+        // return makeRequestToRealServer();
       }
 
       console.error(`[crash][${(request_url as URL).href}]`, error);
@@ -253,7 +255,13 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
 
       const proxied_cookie = cookie.proxySetter();
 
+      // TODO: only return not `httpOnly` cookies
       if (proxied_cookie !== null) {
+        // just get name=value part
+        // and push it to the server cookie store
+        const proxied_cookie_output = proxied_cookie.split(";")[0];
+        cookieStore.push(proxied_cookie_output);
+
         response_headers.push(key, proxied_cookie);
       }
     }
