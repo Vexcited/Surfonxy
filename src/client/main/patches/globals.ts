@@ -350,6 +350,11 @@ export const overrideNavigatorRegisterProtocolHandler = ($window: typeof window)
 
 export const patchDocumentCookie = ($window: typeof window) => {
   try {
+    // default behavior before any patch
+    const cookie_descriptor = Object.getOwnPropertyDescriptor($window.Document.prototype, "cookie")!;
+    // @ts-ignore
+    $window.document.getCookies = cookie_descriptor.get;
+
     patchDescriptorInPrototype(
       $window,
       [

@@ -34,8 +34,31 @@ export const initializeClient = (
     // Define `$window.__sfLocation`.
     defineProxiedLocation(SurfonxyLocation.create(href, undefined, $window), $window);
 
+    // const broadcast = new BroadcastChannel("__sf_broadcast_channel");
+    // broadcast.onmessage = (event) => {
+    //   if (event.data === "info") {
+    //     broadcast.postMessage({
+    //       // @ts-expect-error
+    //       location_href: ($window.__sfLocation as SurfonxyLocation).href
+    //     });
+    //   }
+    // };
+
     // @ts-expect-error
     checkServiceWorkerRegistration($window);
+
+    const broadcast = new BroadcastChannel("sf-cookie-broadcast-channel");
+    navigator.serviceWorker.onmessage = (event) => {
+      if (event.data.type === "__SF_GET_DOCUMENT.COOKIE__") {
+        broadcast.postMessage({
+          type: "__SF_GET_DOCUMENT.COOKIE__",
+          id: event.data.id,
+          // @ts-expect-error
+          cookies: document.getCookies()
+        });
+      }
+    };
+
     initializeMutationObserver($window);
     patchHTMLBaseElementHref($window);
     patchWindowOpen($window);

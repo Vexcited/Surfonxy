@@ -38,7 +38,7 @@ export const rewriteRequest = async ($window: typeof window, original_request: R
     method: original_request.method,
     headers: new Headers(original_request.headers),
     mode: "cors",
-    credentials: "include",
+    credentials: "omit", // remove cookies
     cache: "default",
     redirect: original_request.redirect,
     referrer: patched_referrer,
@@ -49,6 +49,12 @@ export const rewriteRequest = async ($window: typeof window, original_request: R
         ? request_body
         : void 0
   });
+
+  if ("document" in $window) {
+    if ("cookie" in $window.document) {
+      patched_request.headers.set("X-SF-Cookie", $window.document.cookie);
+    }
+  }
       
   return patched_request;
 };

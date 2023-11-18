@@ -57,6 +57,16 @@ if (!window.__surfonxied) {
   
   // Apply service-worker specific patches.
   if ("ServiceWorkerGlobalScope" in window) {
+
+    // const broadcast = new BroadcastChannel("__sf_broadcast_channel");
+    // setInterval(() => {
+    //   broadcast.postMessage("info");
+    // }, 1000);
+
+    // broadcast.onmessage = (event) => {
+    //   console.log("SF_SW:", event.data);
+    // };
+
     patchWindowClientNavigate();
     patchClientsOpenWindow();
     patchSkipWaiting();
