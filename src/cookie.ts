@@ -138,7 +138,7 @@ export class SurfonxyCookie {
   }
 
   /** Whether the given `domain` is matching the current `proxiedHostname` or not. */
-  private checkDomain (domain: string): boolean {
+  public checkDomain (domain: string): boolean {
     return !!this.proxiedHostname.match(
       new RegExp(this.escapeDomainName(domain), "i")
     );
@@ -160,7 +160,7 @@ export class SurfonxyCookie {
    * Example : `test1=Hello; SameSite=None; Domain=.youtube.com; Path=/`
    * will give : `{ name: 'test1', value: 'Hello', samesite: 'None', domain: '.youtube.com', path: '/' }`
    */
-  private setterAsObject (cookieString: string): {
+  public setterAsObject (cookieString: string): {
     name: string;
     value: string | null | boolean;
     [key: string]: string | null | boolean;
@@ -237,7 +237,7 @@ export class SurfonxyCookie {
    * takes a cookie set object and transforms it
    * into a single string that can be used in a cookie set.
    */
-  private static objectAsSetter (cookieSetObj: { [key: string]: string | boolean | null; name: string; value: string | boolean | null; }): string | null {
+  public static objectAsSetter (cookieSetObj: { [key: string]: string | boolean | null; name: string; value: string | boolean | null; }): string | null {
     const output_cookies: string[] = [];
 
     // if there's no name in the cookie, return null

@@ -12,8 +12,10 @@ import WebSocket from "faye-websocket";
 import deflate from "permessage-deflate";
 
 import { SurfonxyCookie } from "./cookie";
-import { tweakHTML } from "./tweaks/html";
+import TCookie from "tough-cookie";
+
 import { getFirstLoadDocument } from "./templates/first-load";
+import { tweakHTML } from "./tweaks/html";
 import { tweakJS } from "./tweaks/javascript";
 
 const main_script_result = await esbuild.build({
@@ -77,7 +79,7 @@ const getBody = (message: IncomingMessage) => {
   });
 };
 
-const cookieStore: string[] = [];
+const cookies_store = new TCookie.CookieJar();
 
 const handleProxy = async (res: ServerResponse<IncomingMessage> & {
   req: IncomingMessage;
@@ -128,25 +130,44 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
     request_headers[key] = value;
   }
 
-  const client_user_cookies = getHeaderValue(request_headers, "x-sf-cookie") || "";
-  const raw_server_user_cookies = cookieStore.join("; ");
-  const server_user_cookies = new SurfonxyCookie(
-    raw_server_user_cookies,
+  const cookiesAsObject: Record<string, string> = {};
+
+  const getter_proxier = new SurfonxyCookie(
+    cookies_store.getCookieStringSync(request_proxy_url.href),
     request_url.hostname,
     request_proxy_url.hostname
-  ).proxyGetter();
+  );
 
+  const server_user_cookies = getter_proxier.proxyGetter();
+  for (const cookie of server_user_cookies.split("; ")) {
+    if (!cookie) continue;
+    const [key, value] = cookie.split("=");
+    cookiesAsObject[key] = value;
+  }
+
+  const client_user_cookies = (getHeaderValue(request_headers, "x-sf-cookie") || "")
+    .split(";")
+    .map(cookieString => TCookie.parse(cookieString));
+  for (const cookie of client_user_cookies) {
+    if (!cookie) {
+      continue;
+    } // sus
+    cookiesAsObject[cookie.key] = cookie.value;
+  }
+  
   // we concatenate both cookies
-  const sent_cookies = [
-    ...client_user_cookies.split(";").map((cookie) => cookie.trim()),
-    ...server_user_cookies.split(";").map((cookie) => cookie.trim())
-  ].join("; ");
+  const sent_cookies = [];
 
-  console.log("sent:", sent_cookies, "::", request_url.href);
+  for (const key in cookiesAsObject) {
+    if (Object.prototype.hasOwnProperty.call(cookiesAsObject, key)) {
+      const value = cookiesAsObject[key];
+      sent_cookies.push(key + "=" + value);
+    }
+  }
 
   // Proxy the cookies to have only the ones for the current domain.
-  if (sent_cookies) {
-    setHeaderValue(request_headers, "Cookie", sent_cookies);
+  if (sent_cookies.length > 0) {
+    setHeaderValue(request_headers, "Cookie", sent_cookies.join("; "));
   }
   else deleteHeaderValue(request_headers, "Cookie");
 
@@ -247,22 +268,35 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
 
     // Don't forget to proxy the set-cookies.
     if (key === "set-cookie") {
-      const cookie = new SurfonxyCookie(
+      const proxier = new SurfonxyCookie(
         value,
         (request_url as URL).hostname,
         request_proxy_url.hostname
       );
 
-      const proxied_cookie = cookie.proxySetter();
+      // rewrite a part of the `proxySetter`
+      const cookiesObj = proxier.setterAsObject(proxier.cookieString);
 
-      // TODO: only return not `httpOnly` cookies
-      if (proxied_cookie !== null) {
-        // just get name=value part
-        // and push it to the server cookie store
-        const proxied_cookie_output = proxied_cookie.split(";")[0];
-        cookieStore.push(proxied_cookie_output);
-
-        response_headers.push(key, proxied_cookie);
+      if (cookiesObj !== null) {
+        const cookieDomain = "domain" in cookiesObj
+          // cookies can be named like .example.com, so we remove the dot
+          ? (cookiesObj.domain as string).replace(/^\./, "")
+          // if there's no domain set, it's the current proxied hostname.
+          : proxier.proxiedHostname; // -> 
+        
+        if (proxier.checkDomain(cookieDomain)) {
+          cookiesObj.name = cookiesObj.name + "@" + cookieDomain;
+          cookiesObj.domain = proxier.localHostname;
+          // set the path by default to "/"
+          cookiesObj.path = "path" in cookiesObj ? cookiesObj.path : "/";
+          cookiesObj.secure = true;
+        
+          const cookie_setter = SurfonxyCookie.objectAsSetter(cookiesObj);
+          if (cookie_setter) {
+            cookies_store.setCookieSync(cookie_setter, request_proxy_url.href);
+            response_headers.push(key, cookie_setter);
+          }
+        }
       }
     }
     else if (
@@ -301,7 +335,6 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
       // If there's an error, it's 99% relative.
       // NOTE: Yes 1% remains, it's what I don't know, yet.
       catch {
-        console.log("is relative");
         old_location = new URL(
           redirect_to,
           // We pass in the original URL
@@ -322,7 +355,7 @@ const handleProxy = async (res: ServerResponse<IncomingMessage> & {
       // already been set up.
       new_redirection_url.searchParams.delete("__sf_register");
       
-      console.log("[req][redirect]", `${old_location.href} (${redirect_to}) -> ${new_redirection_url.href}`);
+      // console.log("[req][redirect]", `${old_location.href} (${redirect_to}) -> ${new_redirection_url.href}`);
       response_headers[locationHeaderIndex + 1] = new_redirection_url.href;
       res.writeHead(response.status, response_headers);
       return res.end();
