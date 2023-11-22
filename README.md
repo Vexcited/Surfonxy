@@ -91,3 +91,32 @@ You'll see two new files in your current directory, `surfonxy.dev.pem` and `surf
 Move them in this `example` directory. On WSL2, you just drag the created certificates into the `example` folder.
 
 You're now ready ! You can run `pnpm node:start` and go to <https://surfonxy.dev> to see the test server running.
+
+### Using `certbot` when deploying
+
+> Extracted from <https://certbot.eff.org/instructions?ws=other&os=ubuntufocal&tab=standard>
+
+You must have `snap` installed on your server.
+
+```bash
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+sudo certbot certonly --standalone
+
+# => later renew using
+sudo certbot renew --dry-run
+```
+
+The certificates will be ...
+
+- `/etc/letsencrypt/live/example.com/fullchain.pem` -> `surfonxy.dev.pem`
+- `/etc/letsencrypt/live/example.com/privkey.pem` -> `surfonxy.dev-key.pem`
+
+Copy them ...
+
+```bash
+sudo cp /etc/letsencrypt/live/example.com/fullchain.pem ./surfonxy.dev.pem
+sudo cp /etc/letsencrypt/live/example.com/privkey.pem ./surfonxy.dev-key.pem
+```
+
+Done !
