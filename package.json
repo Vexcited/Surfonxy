@@ -1,7 +1,11 @@
 {
   "name": "surfonxy",
-  "description": "A well working, easy to use, ad-free and completely transparent web proxy for humanity.",
+  "description": "An experimental client-side focused Node.js web proxy.",
   "type": "module",
+  "license": "GPL-3.0",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "lint": "eslint --ext .ts,.js .",
     "node:start": "tsx watch ./src/index.ts",
