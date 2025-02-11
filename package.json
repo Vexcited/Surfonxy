@@ -20,7 +20,7 @@
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "elysia": "^0.7.24",
-    "esbuild": "^0.19.5",
+    "esbuild": "^0.25.0",
     "eslint": "^8.52.0",
     "tsx": "^3.12.2",
     "typescript": "^5.2.2"
